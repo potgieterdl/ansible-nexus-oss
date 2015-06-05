@@ -11,9 +11,20 @@
   sudo: yes
   tags: base
 
+- name: Check if my_package is installed
+  shell: "dpkg-query -l | grep -E 'oracle-java|openjdk' | wc -l"
+  register: my_package_check_deb
+  failed_when: my_package_check_deb.rc > 1
+  changed_when: my_package_check_deb.rc == 1
+
+- debug: var=my_package_check_deb
+
 - include: oraclejdk.yml
   sudo: yes
   tags: java
+  set_fact:
+    java_packages: "{{ __java_packages | list }}"
+  when: java_packages is not defined and (my_package_check_deb|int) > 0
 
 - include: nexus.yml
   sudo: yes
